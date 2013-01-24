@@ -19,22 +19,22 @@ log manager =)
 
 ### Usage ###
 
->Synopsis:
->mylog.pl [-h|-help|--help] <command> [arguments]
+Synopsis:
+mylog.pl [-h|-help|--help] <command> [arguments]  
 
 
->To write to log
->mylog.pl write <some string> [-tag TAGNAME] [-pri PRIORITY]
+To write to log  
+mylog.pl write <some string> [-tag TAGNAME] [-pri PRIORITY]
 
->Try the following:
+Try the following:  
 >% perl mylog.pl write My first log! -tag test -pri 1
 >% perl mylog.pl write Another log! -tag test -pri 2
 
 
->To read a log
->mylog.pl read <some string> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD]
+To read a log  
+mylog.pl read <some string> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD]
 
->Try the following:
+Try the following:  
 >% perl mylog.pl read \# Show all logs for today
 >
 >% perl mylog.pl read -tag test \# Show logs with the _test_ tag
