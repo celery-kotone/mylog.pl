@@ -13,8 +13,8 @@ use Encode;
 
 my $log_dir = sprintf( "%s/%s", $ENV{'HOME'}, "opt/mylog" );
 
-if ( defined( $ENV{'LOG_DIR'} ) ) {
-    $log_dir = $ENV{'LOG_DIR'};
+if ( defined( $ENV{'MYLOG_DIR'} ) ) {
+    $log_dir = $ENV{'MYLOG_DIR'};
 }
 
 unless ( -e $log_dir ) {
