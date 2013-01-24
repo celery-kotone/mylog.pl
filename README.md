@@ -19,7 +19,7 @@ log manager =)
 
 ### Usage ###
 
-Synopsis:
+Synopsis:  
 mylog.pl [-h|-help|--help] <command> [arguments]  
 
 
