@@ -24,7 +24,7 @@ mylog.pl [-h|-help|--help] <command> [arguments]
 
 
 To write to log  
-mylog.pl write <some string> [-tag TAGNAME] [-pri PRIORITY]
+mylog.pl write \<some string\> [-tag TAGNAME] [-pri PRIORITY]
 
 Try the following:  
 >% perl mylog.pl write My first log! -tag test -pri 1
@@ -32,7 +32,7 @@ Try the following:
 
 
 To read a log  
-mylog.pl read <some string> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD]
+mylog.pl read \<some string\> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD]
 
 Try the following:  
 >% perl mylog.pl read \# Show all logs for today

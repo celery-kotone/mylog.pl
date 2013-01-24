@@ -246,12 +246,12 @@ sub log_write {
 sub print_help {
     print STDERR <<EOS;
 Synopsis:
-    mylog [-h|-help|--help] command
+    mylog [-h|-help|--help] <command> [arguments]
 
 Description:
     A simple interface for the management of logs.
-    mylog write <query> [-tag TAGNAME] [-pri PRIORITY]
-    mylog read <query> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD] [-sort SORTKEY]
+    mylog.pl write <some string> [-tag TAGNAME] [-pri PRIORITY]
+    mylog.pl read <some string> [-tag TAGNAME] [-pri PRIORITY] [-key KEYWORD]
 EOS
 exit;
 }
