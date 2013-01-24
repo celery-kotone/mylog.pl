@@ -9,12 +9,12 @@ log manager =)
 
 ### Installation ###
 
->Make sure you have a perl environment.
->The _utf8_ and _Encode_ modules are required.
->Just alias the script to whatever command you want.
->On the first run, the script will create the following directory
->$HOME/opt/mylog
->or if the _MYLOG\_DIR_ is set, it will use the specified directory.
+Make sure you have a perl environment.  
+The _utf8_ and _Encode_ modules are required.  
+Just alias the script to whatever command you want.  
+On the first run, the script will create the following directory  
+$HOME/opt/mylog  
+or if the _MYLOG\_DIR_ is set, it will use the specified directory.  
 
 
 ### Usage ###
