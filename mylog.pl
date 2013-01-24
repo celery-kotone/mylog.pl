@@ -153,7 +153,8 @@ sub log_read {
 	    }
 
 	    if( /^LOG:([\d-]+)/ ) {
-		$logid = $1;
+		my ( $year, $month, $day, $hour, $min, $sec ) = split( /-/, $1 );
+		$logid = sprintf( "%d-%02d-%02d-%02d-%02d-%02d", $year, $month, $day, $hour, $min, $sec );
 		next;
 	    }
 
@@ -190,9 +191,12 @@ sub log_read {
 
 	foreach my $log ( map{ $_->[0] }
 			  sort{ $a->[1] <=> $b->[1] }
-			  map{ [$_, join('', split( /-/, $_ ) )] }
+			  map{ [$_, join('',
+					 map{ $_ = sprintf( "%02d", $_ ) }
+					 split( /-/, $_ ) )] }
 			  keys %$logs ) {
 	    next unless $logs->{$log}->{'tag'};
+	    next unless $logs->{$log}->{'log'};
 
 	    if( defined( $key ) ) {
 		next unless $logs->{$log}->{'log'} =~ /$key/;
@@ -203,7 +207,7 @@ sub log_read {
 		next unless $logs->{$log}->{'pri'} > $pri;
 	    }
 
-	    my ( $year, $month, $day, $hour, $min, $sec ) = split( /-/, $log );
+	    ( $year, $month, $day, $hour, $min, $sec ) = split( /-/, $log );
 	    printf( "Log of %d-%02d-%02d %02d:%02d:%02d\n- %s\n",
 		    $year, $month, $day, $hour, $min, $sec, $logs->{$log}->{'log'} );
 	}
@@ -234,7 +238,7 @@ sub log_write {
 	    or die( sprintf( "Failed to open %s\n", $filename ) );
 	}
 
-    printf $lf ( "LOG:%s\n",
+    printf $lf ( "LOG:%d-%02d-%02d-%02d-%02d-%02d\n",
 		 join( '-', $year, $month, $day, $hour, $min, $sec ));
     printf $lf ( "TAG:%s\n", $tag ) if defined( $tag );
     printf $lf ( "PRI:%d\n", $pri ) if defined( $pri );
