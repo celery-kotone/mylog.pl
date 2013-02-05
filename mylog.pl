@@ -81,6 +81,7 @@ die( "No command specified" ) unless( $command );
 my $tag = $opts{'tag'} if defined( $opts{'tag'} );
 my $key = $opts{'key'} if defined( $opts{'key'} );
 my $pri = $opts{'pri'} if defined( $opts{'pri'} ) && $opts{'pri'} =~ /^\d$/;
+my $id  = $opts{'id'}  if defined( $opts{'id'} );
 
 
 
@@ -139,8 +140,6 @@ sub log_read {
 	    printf ( "Filter PRIORITY: %d\n", $pri );
 	}
 
-	printf ( "\r\n" );
-
 	my ( $logs, $header, $logid );
 	my ( $flog, $i ) = ( 0, 0 );
 
@@ -168,16 +167,25 @@ sub log_read {
 		next;
 	    }
 
+	    if( /^ID:(\d+)$/ ) {
+		$logs->{$logid}->{'id'} = $1;
+	    }
+
 	    if( defined( $tag ) ) {
-		if( /^TAG.+$/ ) {
-		    if( /$tag/ ) {
-			$logs->{$logid}->{'tag'} = 1;
+		if( /^TAG:(.+)$/ ) {
+		    my $tmp = $1;
+		    if( $tmp =~ /$tag/ ) {
+			$logs->{$logid}->{'tag'} = $tmp;
 		    } else {
 			$logs->{$logid}->{'tag'} = 0;
 		    }
 		}
 	    } else {
-		$logs->{$logid}->{'tag'} = 1;
+		if( /^TAG:(.+)$/ ) {
+		    $logs->{$logid}->{'tag'} = $1;
+		}
+		$logs->{$logid}->{'tag'} = "None" if
+		    !$logs->{$logid}->{'tag'};
 	    }
 
 	    if( /^PRI:(\d)$/ ) {
@@ -208,8 +216,11 @@ sub log_read {
 	    }
 
 	    ( $year, $month, $day, $hour, $min, $sec ) = split( /-/, $log );
-	    printf( "Log of %d-%02d-%02d %02d:%02d:%02d\n- %s\n",
-		    $year, $month, $day, $hour, $min, $sec, $logs->{$log}->{'log'} );
+	    printf( "Log of %d-%02d-%02d %02d:%02d:%02d TAG:%s ID:%d\n- %s\n",
+		    $year, $month, $day, $hour, $min, $sec,
+		    $logs->{$log}->{'tag'},
+		    $logs->{$log}->{'id'},
+		    $logs->{$log}->{'log'} );
 	}
     } else {
 	die( sprintf( "Logfile %s not found\n", $filename ) );
@@ -239,12 +250,121 @@ sub log_write {
 	}
 
     printf $lf ( "LOG:%d-%02d-%02d-%02d-%02d-%02d\n",
-		 join( '-', $year, $month, $day, $hour, $min, $sec ));
+		 $year, $month, $day, $hour, $min, $sec );
+    printf $lf ( "ID:%d\n", $year * ( $month + $day + $hour + $min + $sec ) );
     printf $lf ( "TAG:%s\n", $tag ) if defined( $tag );
     printf $lf ( "PRI:%d\n", $pri ) if defined( $pri );
     printf $lf ( "START\n%s\nEND\n", encode_utf8( $log ) );
 
     close $lf;
+}
+
+sub log_remove {
+    my $query = shift;
+    my $id = shift;
+
+    if( defined( $query ) ) {
+	if( $query eq "yesterday" ) {
+	    --$day;
+	} elsif ( $query =~ /(\d+) days ago/ ) {
+	    $day -= $1;
+	} elsif ( $query =~ /[\d-]+/ ) {
+	    my @date = reverse( split( /-/, $query ) );
+	    if( scalar( @date ) ) {
+		$day = shift( @date );
+	    }
+	    if( scalar( @date ) ) {
+		$month = shift( @date );
+	    }
+	    if( scalar( @date ) ) {
+		$year = shift( @date );
+	    }
+	}
+    }
+
+    my $filename = sprintf( "%s/%s.mylog",
+			    $log_dir,
+			    join( '-', $year, $month, $day ) );
+
+    if( -e $filename ) {
+	open( my $lf, "<", $filename );
+
+	printf ( "Removing from  log %s\n", $filename );
+
+	my ( $logs, $header, $logid );
+	my ( $flog, $i ) = ( 0, 0 );
+
+	while( <$lf> ) {
+	    chomp;
+
+	    if( /^#/ && !defined( $header ) ) {
+		$header = $_;
+		next;
+	    }
+
+	    if( /^LOG:([\d-]+)/ ) {
+		my ( $year, $month, $day, $hour, $min, $sec ) =
+		    split( /-/, $1 );
+		$logid = sprintf( "%d-%02d-%02d-%02d-%02d-%02d",
+				  $year, $month, $day, $hour, $min, $sec );
+		next;
+	    }
+
+	    if( /^START$/ ) {
+		$flog = 1;
+		next;
+	    }
+
+	    if( /^END$/ ) {
+		$flog = 0;
+		next;
+	    }
+
+	    if( /^ID:(\d+)$/ ) {
+		if($1 == $id) {
+		    $logs->{$logid}->{'remove'} = 1;
+		}
+	    }
+
+	    if( defined( $tag ) ) {
+		if( /^TAG.+$/ ) {
+		    if( /$tag/ ) {
+			$logs->{$logid}->{'tag'} = 1;
+		    } else {
+			$logs->{$logid}->{'tag'} = 0;
+		    }
+		}
+	    } else {
+		$logs->{$logid}->{'tag'} = 1;
+	    }
+
+	    if( /^PRI:(\d)$/ ) {
+		$logs->{$logid}->{'pri'} = $1;
+	    }
+
+	    if( $flog ) {
+		$logs->{$logid}->{'log'} .= $_;
+	    }
+	}
+
+	foreach my $log ( map{ $_->[0] }
+			  sort{ $a->[1] <=> $b->[1] }
+			  map{ [$_, join('',
+					 map{ $_ = sprintf( "%02d", $_ ) }
+					 split( /-/, $_ ) )] }
+			  keys %$logs ) {
+	    next if $logs->{$log}->{'remove'};
+
+	    print $logs->{$log}->{'remove'}. "\n";
+
+	    ( $year, $month, $day, $hour, $min, $sec ) = split( /-/, $log );
+	    printf( "Log of %d-%02d-%02d %02d:%02d:%02d\n- %s\n",
+		    $year, $month, $day, $hour, $min, $sec,
+		    $logs->{$log}->{'log'} );
+	}
+    } else {
+	die( sprintf( "Logfile %s not found\n", $filename ) );
+    }
 }
 
 sub print_help {
@@ -270,8 +390,10 @@ exit;
 
 if( $command eq "write" ) {
     log_write( $query );
-} elsif( $command eq "read" ) {
+}elsif ( $command eq "read" ) {
     log_read( $query );
+} elsif ( $command eq "remove" ) {
+    log_remove( $query, $id );
 } else {
     die( sprintf( "Specified command %s is invalid\n", $command ) );
 }
